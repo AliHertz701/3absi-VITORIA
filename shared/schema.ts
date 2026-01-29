@@ -15,6 +15,7 @@ export const products = pgTable("products", {
   isFeatured: boolean("is_featured").default(false),
 });
 
+
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   customerName: text("customer_name").notNull(),

@@ -1,26 +1,78 @@
 import { useQuery } from "@tanstack/react-query";
-import { api, buildUrl } from "@shared/routes";
+import { z } from "zod";
 
+// --- Define schemas matching Django API responses ---
+const productSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  isFeatured: z.boolean().optional(),
+  year: z.number(),
+  origin: z.string(),
+  fabric: z.string(),
+  image: z.string(),
+  description: z.string(),
+});
+
+// --- Base URL for Django API ---
+const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+
+// --- Dummy data ---
+const dummyProducts = [
+  {
+    id: 1,
+    name: "Dummy Product 1",
+    isFeatured: true,
+    year: 2023,
+    origin: "Libya",
+    fabric: "Cotton",
+    image: "https://via.placeholder.com/150",
+    description: "This is a dummy product",
+  },
+  {
+    id: 2,
+    name: "Dummy Product 2",
+    isFeatured: false,
+    year: 2022,
+    origin: "Libya",
+    fabric: "Silk",
+    image: "https://via.placeholder.com/150",
+    description: "This is another dummy product",
+  },
+];
+
+// --- Hooks ---
 export function useProducts() {
   return useQuery({
-    queryKey: [api.products.list.path],
+    queryKey: ["products"],
     queryFn: async () => {
-      const res = await fetch(api.products.list.path);
-      if (!res.ok) throw new Error("Failed to fetch products");
-      return api.products.list.responses[200].parse(await res.json());
+      try {
+        const res = await fetch(`${API_BASE}/api/products/`);
+        if (!res.ok) throw new Error("Failed to fetch products");
+        const data = await res.json();
+        const parsed = z.array(productSchema).parse(data);
+        return parsed.length ? parsed : dummyProducts; // fallback if empty
+      } catch (err) {
+        console.warn("Fetching products failed, using dummy data:", err);
+        return dummyProducts;
+      }
     },
   });
 }
 
 export function useProduct(id: number) {
   return useQuery({
-    queryKey: [api.products.get.path, id],
+    queryKey: ["product", id],
     queryFn: async () => {
-      const url = buildUrl(api.products.get.path, { id });
-      const res = await fetch(url);
-      if (res.status === 404) return null;
-      if (!res.ok) throw new Error("Failed to fetch product");
-      return api.products.get.responses[200].parse(await res.json());
+      try {
+        const res = await fetch(`${API_BASE}/api/products/${id}/`);
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error("Failed to fetch product");
+        const data = await res.json();
+        return productSchema.parse(data);
+      } catch (err) {
+        console.warn(`Fetching product ${id} failed, using dummy product:`, err);
+        return dummyProducts.find((p) => p.id === id) || dummyProducts[0];
+      }
     },
   });
 }

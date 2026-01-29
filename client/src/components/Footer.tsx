@@ -1,58 +1,159 @@
 import { Link } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocale } from "@/contexts/LocaleContext";
+import { Loader2 } from "lucide-react";
+
+interface Category {
+  id: number;
+  name: string;
+  slug?: string;
+  description?: string;
+}
+
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 export function Footer() {
+  const { t, isRTL } = useLocale();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch categories from API
+  useEffect(() => {
+    fetch(`${API_URL}/categories/`)
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch categories");
+        return res.json();
+      })
+      .then((data: Category[]) => {
+        setCategories(data);
+      })
+      .catch(err => {
+        console.error("Error fetching footer categories:", err);
+        setCategories([]);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle newsletter logic here
+    alert(t('footer.newsletter_success') || 'Thank you for subscribing!');
+  };
+
   return (
-    <footer className="bg-foreground text-background py-16 px-6">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-        <div className="space-y-4">
-          <h3 className="font-display text-2xl">Rare Heritage</h3>
-          <p className="text-background/60 text-sm leading-relaxed max-w-xs">
-            Curating the finest antique garments from Italy's golden eras. 
-            Each piece tells a story of elegance, craft, and history.
+    <footer className="bg-ivory-900 text-cream py-16 px-4 sm:px-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+        
+        {/* Brand Column */}
+        <div className="space-y-4 sm:col-span-2 lg:col-span-1">
+          <h3 className="font-display text-2xl text-cream">
+            {t('footer.brand') || 'VITORIA'}
+          </h3>
+          <p className="text-cream/60 text-sm leading-relaxed max-w-xs font-sans">
+            {t('footer.description') || "Curating the finest heritage garments from history's most elegant eras. Each piece tells a story of craftsmanship and timeless beauty."}
           </p>
         </div>
         
+        {/* Shop Links - Dynamic Categories */}
         <div>
-          <h4 className="font-display text-lg mb-4 text-gold">Shop</h4>
-          <ul className="space-y-2 text-sm text-background/60">
-            <li><Link href="/shop" className="hover:text-white transition-colors">All Collections</Link></li>
-            <li><Link href="/shop?category=Dresses" className="hover:text-white transition-colors">Dresses</Link></li>
-            <li><Link href="/shop?category=Outerwear" className="hover:text-white transition-colors">Coats & Capes</Link></li>
-            <li><Link href="/shop?category=Accessories" className="hover:text-white transition-colors">Accessories</Link></li>
+          <h4 className="font-display text-lg mb-4 text-gold">
+            {t('footer.shop') || 'Shop'}
+          </h4>
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-cream/60 text-sm">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span className="font-sans text-xs">{t('loading') || 'Loading...'}</span>
+            </div>
+          ) : (
+            <ul className="space-y-2 text-sm text-cream/60">
+              <li>
+                <Link 
+                  href="/shop" 
+                  className="hover:text-cream transition-colors duration-300 font-sans"
+                >
+                  {t('footer.all_collections') || 'All Collections'}
+                </Link>
+              </li>
+              {categories.slice(0, 5).map((category) => (
+                <li key={category.name}>
+                  <Link 
+                    href={`/shop?category=${category.name}`} 
+                    className="hover:text-cream transition-colors duration-300 font-sans capitalize"
+                  >
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
+              {categories.length > 5 && (
+                <li>
+                  <Link 
+                    href="/shop" 
+                    className="text-gold hover:text-cream transition-colors duration-300 font-sans text-xs uppercase tracking-wider"
+                  >
+                    {t('footer.view_all') || 'View All →'}
+                  </Link>
+                </li>
+              )}
+            </ul>
+          )}
+        </div>
+
+        {/* Client Service */}
+        <div>
+          <h4 className="font-display text-lg mb-4 text-gold">
+            {t('footer.service') || 'Client Service'}
+          </h4>
+          <ul className="space-y-2 text-sm text-cream/60">
+            <li>
+              <a href="/contact" className="hover:text-cream transition-colors duration-300 font-sans">
+                {t('footer.contact') || 'Contact Us'}
+              </a>
+            </li>
+
+
+            <li>
+              <a href="/faq" className="hover:text-cream transition-colors duration-300 font-sans">
+                {t('footer.faq') || 'FAQ'}
+              </a>
+            </li>
           </ul>
         </div>
 
+        {/* Newsletter */}
         <div>
-          <h4 className="font-display text-lg mb-4 text-gold">Client Service</h4>
-          <ul className="space-y-2 text-sm text-background/60">
-            <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Shipping & Returns</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Authenticity Guarantee</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Care Guide</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="font-display text-lg mb-4 text-gold">Newsletter</h4>
-          <p className="text-xs text-background/60 mb-4">
-            Subscribe to receive updates on new acquisitions.
+          <h4 className="font-display text-lg mb-4 text-gold">
+            {t('footer.newsletter') || 'Newsletter'}
+          </h4>
+          <p className="text-xs text-cream/60 mb-4 font-sans leading-relaxed">
+            {t('footer.newsletter_desc') || 'Subscribe to receive updates on new acquisitions and exclusive offers.'}
           </p>
-          <div className="flex border-b border-white/20 pb-2">
+          <form onSubmit={handleNewsletterSubmit} className="flex border-b border-cream/20 pb-2">
             <input 
               type="email" 
-              placeholder="Email Address" 
-              className="bg-transparent border-none outline-none text-white text-sm w-full placeholder:text-white/30"
+              placeholder={t('footer.email_placeholder') || 'Email Address'} 
+              className="bg-transparent border-none outline-none text-cream text-sm w-full placeholder:text-cream/30 font-sans"
+              required
             />
-            <button className="text-xs uppercase tracking-widest hover:text-gold transition-colors">Join</button>
-          </div>
+            <button 
+              type="submit"
+              className="text-xs uppercase tracking-widest hover:text-gold transition-colors duration-300 font-sans whitespace-nowrap"
+            >
+              {t('footer.join') || 'Join'}
+            </button>
+          </form>
         </div>
       </div>
       
-      <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-xs text-white/30">
-        <p>&copy; 2024 Rare Heritage. All rights reserved.</p>
-        <div className="flex space-x-6 mt-4 md:mt-0">
-          <span>Privacy Policy</span>
-          <span>Terms of Use</span>
+      {/* Bottom Bar */}
+      <div className="max-w-7xl mx-auto mt-12 lg:mt-16 pt-8 border-t border-cream/10 flex flex-col md:flex-row justify-between items-center text-xs text-cream/40 gap-4">
+        <p className="font-sans text-center md:text-left">
+          &copy; {new Date().getFullYear()} {t('footer.brand') || 'VITORIA'}. {t('footer.rights') || 'All rights reserved.'}
+        </p>
+        <div className={`flex gap-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+
+          <Link to="/terms" className="hover:text-cream transition-colors font-sans">
+            {t('footer.terms') || 'Terms of Use'}
+          </Link>
         </div>
       </div>
     </footer>
