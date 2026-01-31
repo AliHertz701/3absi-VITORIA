@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { resolveMediaUrl } from "@/api";
 import { useLocale } from "@/contexts/LocaleContext";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-
+import { getColorDisplayName } from "@/lib/colors";
 interface Category {
   id: number;
   name: string;
@@ -237,68 +237,71 @@ export function Navigation() {
                       </motion.div>
                     ) : (
                       <div className="space-y-6">
-                        {items.map((item) => {
-                          const product = item.product;
-                          const imageUrl = resolveMediaUrl(product.image || "");
-                          const discountedPrice = (product.price || 0) - 
-                            ((product.discount_percentage || 0) * (product.price || 0)) / 100;
-                          const itemTotal = discountedPrice * item.quantity;
+{items.map((item) => {
+  const product = item.product;
+  const imageUrl = resolveMediaUrl(product.image || "");
+  const discountedPrice = (product.price || 0) - 
+    ((product.discount_percentage || 0) * (product.price || 0)) / 100;
+  const itemTotal = discountedPrice * item.quantity;
 
-                          return (
-                            <motion.div
-                              key={item.id}
-                              initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              className="bg-white border border-ivory-200 p-4 shadow-sm"
-                            >
-                              <div className={`flex gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                <div className="w-20 h-24 flex-shrink-0 bg-ivory-100">
-                                  <img src={imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className={`flex justify-between items-start ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                    <div className={isRTL ? 'text-right pr-2' : 'pr-2'}>
-                                      <h4 className="font-serif text-base text-ivory-900 line-clamp-1">{product.name}</h4>
-                                      <p className="text-xs text-ivory-600 font-sans mt-1">{product.brand || 'Timeless'}</p>
-                                      {(item.selectedSize || item.selectedColor) && (
-                                        <div className={`flex flex-wrap gap-2 mt-2 ${isRTL ? 'justify-end' : 'justify-start'}`}>
-                                          {item.selectedSize && (
-                                            <span className="inline-block px-2 py-0.5 text-[10px] uppercase bg-ivory-100 text-ivory-700 border border-ivory-200">
-                                              {isRTL ? `${item.selectedSize} :Size` : `Size: ${item.selectedSize}`}
-                                            </span>
-                                          )}
-                                          {item.selectedColor && (
-                                            <span className="inline-block px-2 py-0.5 text-[10px] uppercase bg-ivory-100 text-ivory-700 border border-ivory-200">
-                                              {isRTL ? `${item.selectedColor} :Color` : `Color: ${item.selectedColor}`}
-                                            </span>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <button onClick={() => removeFromCart(item.id)} className="text-ivory-300 hover:text-burgundy ml-2 p-1">
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                  <div className={`flex items-center justify-between mt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                    <div className={`flex items-center border border-ivory-300 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1} className="w-8 h-8 flex items-center justify-center text-ivory-600 hover:bg-ivory-100 disabled:opacity-50">
-                                        <span className="text-xs">−</span>
-                                      </button>
-                                      <span className="w-10 text-center font-serif text-sm">{item.quantity}</span>
-                                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 flex items-center justify-center text-ivory-600 hover:bg-ivory-100">
-                                        <span className="text-xs">+</span>
-                                      </button>
-                                    </div>
-                                    <div className={`${isRTL ? 'text-left' : 'text-right'}`}>
-                                      <p className="font-serif text-ivory-900">LYD {itemTotal.toFixed(2)}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
-                          );
-                        })}
+  return (
+    <motion.div
+      key={item.id}
+      initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="bg-white border border-ivory-200 p-4 shadow-sm"
+    >
+      <div className={`flex gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="w-20 h-24 flex-shrink-0 bg-ivory-100">
+          <img src={imageUrl} alt={product.name} className="w-full h-full object-cover" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className={`flex justify-between items-start ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className={isRTL ? 'text-right pr-2' : 'pr-2'}>
+              <h4 className="font-serif text-base text-ivory-900 line-clamp-1">{product.name}</h4>
+              <p className="text-xs text-ivory-600 font-sans mt-1">{product.brand || 'Timeless'}</p>
+              {(item.selectedSize || item.selectedColor) && (
+                <div className={`flex flex-wrap gap-2 mt-2 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                  {item.selectedSize && (
+                    <span className="inline-block px-2 py-0.5 text-[10px] uppercase bg-ivory-100 text-ivory-700 border border-ivory-200">
+                      {isRTL ? `${item.selectedSize} :${t('product.size')}` : `${t('product.size')}: ${item.selectedSize}`}
+                    </span>
+                  )}
+                  {item.selectedColor && (
+                    <span className="inline-block px-2 py-0.5 text-[10px] uppercase bg-ivory-100 text-ivory-700 border border-ivory-200">
+                      {isRTL 
+                        ? `${t(getColorDisplayName(item.selectedColor))} :${t('product.color')}` 
+                        : `${t('product.color')}: ${t(getColorDisplayName(item.selectedColor))}`
+                      }
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <button onClick={() => removeFromCart(item.id)} className="text-ivory-300 hover:text-burgundy ml-2 p-1">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+          <div className={`flex items-center justify-between mt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center border border-ivory-300 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1} className="w-8 h-8 flex items-center justify-center text-ivory-600 hover:bg-ivory-100 disabled:opacity-50">
+                <span className="text-xs">−</span>
+              </button>
+              <span className="w-10 text-center font-serif text-sm">{item.quantity}</span>
+              <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 flex items-center justify-center text-ivory-600 hover:bg-ivory-100">
+                <span className="text-xs">+</span>
+              </button>
+            </div>
+            <div className={`${isRTL ? 'text-left' : 'text-right'}`}>
+              <p className="font-serif text-ivory-900">LYD {itemTotal.toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+})}
                       </div>
                     )}
                   </AnimatePresence>

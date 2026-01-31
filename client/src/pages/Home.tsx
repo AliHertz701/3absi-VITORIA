@@ -22,50 +22,62 @@ export default function Home() {
       <Navigation />
 
       {/* ================= HERO (BANNERS) ================= */}
-      <section className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-black/30 z-10" />
-          <img
-            src={resolveMediaUrl(banner?.image)}
-            alt={banner?.title || t('nav.home')}
-            className="w-full h-full object-cover"
-          />
-        </div>
+<section className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
+  <div className="absolute inset-0">
+    <div className="absolute inset-0 bg-black/30 z-10" />
+    
+    {banner?.video ? (
+      <video
+        src={resolveMediaUrl(banner.video)}
+        autoPlay
+        muted
+        loop
+        className="w-full h-full object-cover"
+      />
+    ) : (
+      <img
+        src={resolveMediaUrl(banner?.image)}
+        alt={banner?.title || t('nav.home')}
+        className="w-full h-full object-cover"
+      />
+    )}
+  </div>
 
-        <div className="relative z-20 text-center text-white space-y-6 max-w-4xl px-4">
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-sm md:text-base tracking-[0.4em] uppercase font-light"
-          >
-            {banner?.subtitle}
-          </motion.p>
+  <div className="relative z-20 text-center text-white space-y-6 max-w-4xl px-4">
+    <motion.p
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="text-sm md:text-base tracking-[0.4em] uppercase font-light"
+    >
+      {banner?.subtitle}
+    </motion.p>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.8 }}
-            className="font-display text-5xl md:text-7xl lg:text-8xl leading-tight"
-          >
-            {banner?.title}
-          </motion.h1>
+    <motion.h1
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4, duration: 0.8 }}
+      className="font-display text-5xl md:text-7xl lg:text-8xl leading-tight"
+    >
+      {banner?.title}
+    </motion.h1>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="pt-8"
-          >
-            <Link
-              href={(banner as any)?.button_link || "/shop"}
-              className="inline-block border border-white/40 px-8 py-4 text-sm tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300"
-            >
-              {banner?.button_text || t('shop.view_all_collection')}
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.8 }}
+      className="pt-8"
+    >
+      <Link
+        href={(banner as any)?.button_link || "/shop"}
+        className="inline-block border border-white/40 px-8 py-4 text-sm tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300"
+      >
+        {banner?.button_text || t('shop.view_all_collection')}
+      </Link>
+    </motion.div>
+  </div>
+</section>
+
 
       {/* Intro Text */}
       <section className="py-24 px-6 max-w-3xl mx-auto text-center">
@@ -160,7 +172,6 @@ export default function Home() {
         ))}
       </section>
 
-      <Footer />
     </div>
   );
 }

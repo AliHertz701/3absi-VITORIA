@@ -293,65 +293,64 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
           )}
 
           {/* Color Selection - Compact dropdown for mobile */}
+          {product.color && product.color.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] uppercase tracking-wider text-ivory-500 font-sans">
+                  {t('product.color') || 'Color'}
+                </label>
+                {selectedColor && (
+                  <span className="text-[10px] text-burgundy font-medium flex items-center gap-1 px-1.5 py-0.5 bg-burgundy/5 rounded capitalize">
+                    <Check className="w-2.5 h-2.5" />
+                    {t(getColorDisplayName(selectedColor))}
+                  </span>
+                )}
+              </div>
+              
+              {/* Always use select dropdown for color selection */}
+              <div className="relative">
+                <select
+                  value={selectedColor || ''}
+                  onChange={(e) => setSelectedColor(e.target.value || undefined)}
+                  className="w-full text-xs border border-ivory-300 bg-white px-2 py-1.5 pr-8 appearance-none focus:outline-none focus:border-ivory-500 rounded-sm capitalize hover:border-ivory-400 transition-colors duration-200"
+                >
+                  <option value="">{t('product.select_color') || 'Select color'}</option>
+                  {product.color.map((color) => {
+                    const colorCode = getColorCode(color);
+                    const isPattern = isPatternColor(color);
+                    const translationKey = getColorDisplayName(color);
+                    
+                    return (
+                      <option key={color} value={color} className="capitalize">
+                        {t(translationKey)}
+                      </option>
+                    );
+                  })}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-ivory-500 pointer-events-none" />
+              </div>
+              
+              {/* Color preview for selected color */}
+              {selectedColor && (
+                <div className="mt-1.5 flex items-center gap-2 text-[10px] text-ivory-600">
+                  <div 
+                    className="w-4 h-4 rounded-full border border-ivory-300 flex-shrink-0"
+                    style={{ 
+                      backgroundColor: isPatternColor(selectedColor) ? undefined : getColorCode(selectedColor),
+                      backgroundImage: isPatternColor(selectedColor) ? getColorCode(selectedColor) : undefined,
+                      backgroundSize: isPatternColor(selectedColor) ? 'cover' : undefined
+                    }}
+                  />
+                  <span className="truncate">{t(getColorDisplayName(selectedColor))}</span>
+                  <span className="text-[9px] text-ivory-400 ml-auto font-mono truncate">
+                    {selectedColor}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
-{product.color && product.color.length > 0 && (
-  <div className="space-y-1">
-    <div className="flex items-center justify-between">
-      <label className="text-[10px] uppercase tracking-wider text-ivory-500 font-sans">
-        {t('product.color') || 'Color'}
-      </label>
-      {selectedColor && (
-        <span className="text-[10px] text-burgundy font-medium flex items-center gap-1 px-1.5 py-0.5 bg-burgundy/5 rounded capitalize">
-          <Check className="w-2.5 h-2.5" />
-          {getColorDisplayName(selectedColor)}
-        </span>
-      )}
-    </div>
-    
-    {/* Always use select dropdown for color selection */}
-    <div className="relative">
-      <select
-        value={selectedColor || ''}
-        onChange={(e) => setSelectedColor(e.target.value || undefined)}
-        className="w-full text-xs border border-ivory-300 bg-white px-2 py-1.5 pr-8 appearance-none focus:outline-none focus:border-ivory-500 rounded-sm capitalize hover:border-ivory-400 transition-colors duration-200"
-      >
-        <option value="">{t('product.select_color') || 'Select color'}</option>
-        {product.color.map((color) => {
-          const colorCode = getColorCode(color);
-          const isPattern = isPatternColor(color);
-          const displayName = getColorDisplayName(color);
-          
-          return (
-            <option key={color} value={color} className="capitalize">
-              {displayName}
-            </option>
-          );
-        })}
-      </select>
-      <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-ivory-500 pointer-events-none" />
-    </div>
-    
-    {/* Color preview for selected color */}
-    {selectedColor && (
-      <div className="mt-1.5 flex items-center gap-2 text-[10px] text-ivory-600">
-        <div 
-          className="w-4 h-4 rounded-full border border-ivory-300 flex-shrink-0"
-          style={{ 
-            backgroundColor: isPatternColor(selectedColor) ? undefined : getColorCode(selectedColor),
-            backgroundImage: isPatternColor(selectedColor) ? getColorCode(selectedColor) : undefined,
-            backgroundSize: isPatternColor(selectedColor) ? 'cover' : undefined
-          }}
-        />
-        <span className="truncate">{getColorDisplayName(selectedColor)}</span>
-        <span className="text-[9px] text-ivory-400 ml-auto font-mono truncate">
-          {selectedColor}
-        </span>
-      </div>
-    )}
-  </div>
-)}
           {/* SKU - Smaller on mobile */}
-
         </div>
 
         {/* Price Section with LYD - More compact */}

@@ -6,6 +6,7 @@ import { resolveMediaUrl } from "@/api";
 import { useState, useEffect, useRef } from "react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { getColorCode, getColorDisplayName, isPatternColor } from "@/lib/colors";
+
 export function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const { t } = useLocale();
@@ -348,59 +349,60 @@ export function ProductCard({ product }: { product: Product }) {
 
               {/* COLOR SELECTION */}
               {product.color && product.color.length > 0 && (
-  <div>
-    <label className="text-[9px] md:text-[10px] uppercase tracking-wider text-ivory-600 block mb-2">
-      {t('product.select_color') || 'Select Color'}
-    </label>
-    <div className="flex flex-wrap justify-center gap-3 md:gap-4">
-      {product.color.map((color) => {
-        const colorCode = getColorCode(color);
-        const isPattern = isPatternColor(color);
-        
-        return (
-          <button
-            key={color}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setSelectedColor(color);
-            }}
-            className="relative group"
-            title={getColorDisplayName(color)}
-            aria-label={getColorDisplayName(color)}
-          >
-            {/* Color Circle */}
-            <div
-              className={`w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-all duration-200 ${
-                selectedColor === color
-                  ? 'border-ivory-900 scale-110 shadow-md'
-                  : 'border-ivory-300 hover:border-ivory-500 hover:scale-105'
-              }`}
-              style={{
-                background: colorCode,
-                backgroundSize: isPattern ? 'cover' : 'auto'
-              }}
-            />
-            
-            {/* Selection Indicator */}
-            {selectedColor === color && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-ivory-900 rounded-full border-2 border-cream flex items-center justify-center">
-                <svg className="w-2 h-2 md:w-2.5 md:h-2.5 text-cream" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-            )}
-            
-            {/* Tooltip on hover */}
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-ivory-900 text-cream text-[9px] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-              {getColorDisplayName(color)}
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  </div>
-)}
+                <div>
+                  <label className="text-[9px] md:text-[10px] uppercase tracking-wider text-ivory-600 block mb-2">
+                    {t('product.select_color') || 'Select Color'}
+                  </label>
+                  <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+                    {product.color.map((color) => {
+                      const colorCode = getColorCode(color);
+                      const isPattern = isPatternColor(color);
+                      const translationKey = getColorDisplayName(color);
+                      
+                      return (
+                        <button
+                          key={color}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedColor(color);
+                          }}
+                          className="relative group"
+                          title={t(translationKey)}
+                          aria-label={t(translationKey)}
+                        >
+                          {/* Color Circle */}
+                          <div
+                            className={`w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-all duration-200 ${
+                              selectedColor === color
+                                ? 'border-ivory-900 scale-110 shadow-md'
+                                : 'border-ivory-300 hover:border-ivory-500 hover:scale-105'
+                            }`}
+                            style={{
+                              background: colorCode,
+                              backgroundSize: isPattern ? 'cover' : 'auto'
+                            }}
+                          />
+                          
+                          {/* Selection Indicator */}
+                          {selectedColor === color && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-ivory-900 rounded-full border-2 border-cream flex items-center justify-center">
+                              <svg className="w-2 h-2 md:w-2.5 md:h-2.5 text-cream" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
+                          
+                          {/* Tooltip on hover */}
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-ivory-900 text-cream text-[9px] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                            {t(translationKey)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* CONFIRM SELECTION BUTTON (Mobile optimization) */}
               <button
@@ -438,41 +440,42 @@ export function ProductCard({ product }: { product: Product }) {
 
           {/* AVAILABLE COLORS DISPLAY (When not selecting) */}
           {!showVariants && product.color?.length > 0 && (
-  <div className="pt-2 md:pt-3 border-t border-ivory-200">
-    <p className="font-sans text-[10px] md:text-xs text-ivory-500 uppercase tracking-wider mb-2 md:mb-3 text-center">
-      {t('product.available_colors')}
-    </p>
-    <div className="flex flex-wrap justify-center gap-2 md:gap-3">
-      {product.color.map((color) => {
-        const colorCode = getColorCode(color);
-        const isPattern = isPatternColor(color);
-        
-        return (
-          <div
-            key={color}
-            className="relative group"
-            title={getColorDisplayName(color)}
-            aria-label={getColorDisplayName(color)}
-          >
-            {/* Color Circle */}
-            <div
-              className="w-6 h-6 md:w-7 md:h-7 rounded-full border border-ivory-300 hover:border-ivory-400 transition-colors"
-              style={{
-                background: colorCode,
-                backgroundSize: isPattern ? 'cover' : 'auto'
-              }}
-            />
-            
-            {/* Tooltip on hover */}
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 bg-ivory-900 text-cream text-[8px] md:text-[9px] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-              {getColorDisplayName(color)}
+            <div className="pt-2 md:pt-3 border-t border-ivory-200">
+              <p className="font-sans text-[10px] md:text-xs text-ivory-500 uppercase tracking-wider mb-2 md:mb-3 text-center">
+                {t('product.available_colors')}
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 md:gap-3">
+                {product.color.map((color) => {
+                  const colorCode = getColorCode(color);
+                  const isPattern = isPatternColor(color);
+                  const translationKey = getColorDisplayName(color);
+                  
+                  return (
+                    <div
+                      key={color}
+                      className="relative group"
+                      title={t(translationKey)}
+                      aria-label={t(translationKey)}
+                    >
+                      {/* Color Circle */}
+                      <div
+                        className="w-6 h-6 md:w-7 md:h-7 rounded-full border border-ivory-300 hover:border-ivory-400 transition-colors"
+                        style={{
+                          background: colorCode,
+                          backgroundSize: isPattern ? 'cover' : 'auto'
+                        }}
+                      />
+                      
+                      {/* Tooltip on hover */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 bg-ivory-900 text-cream text-[8px] md:text-[9px] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                        {t(translationKey)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
-  </div>
-)}
+          )}
 
           {/* PRICE */}
           {product.show_price && product.price !== undefined && (

@@ -1,58 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRoute, Link } from "wouter";
 import { useCart } from "@/hooks/use-cart";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { 
   Loader2, ArrowLeft, Check, ShoppingBag, Shield, Package, 
-  ChevronLeft, ChevronRight, ChevronDown 
+  ChevronLeft, ChevronRight, ChevronDown, Play, Pause,
+  Volume2, VolumeX
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocale } from "@/contexts/LocaleContext";
 import { resolveMediaUrl } from "@/api";
 import type { Product } from "@/api";
-import { useMediaQuery } from "@/hooks/use-media-query"; // Add this hook or use window width
-
-// Color mapping for visual representation
-const colorMap: Record<string, string> = {
-  'black': '#1a1a1a',
-  'white': '#ffffff',
-  'red': '#dc2626',
-  'blue': '#2563eb',
-  'navy': '#1e3a8a',
-  'navy blue': '#1e3a8a',
-  'green': '#16a34a',
-  'yellow': '#f59e0b',
-  'pink': '#ec4899',
-  'purple': '#9333ea',
-  'brown': '#92400e',
-  'gray': '#6b7280',
-  'grey': '#6b7280',
-  'beige': '#e8dcc4',
-  'cream': '#fffdd0',
-  'burgundy': '#800020',
-  'khaki': '#c3b091',
-  'orange': '#f97316',
-  'gold': '#ffd700',
-  'silver': '#c0c0c0',
-  'tan': '#d2b48c',
-  'olive': '#808000',
-  'teal': '#14b8a6',
-  'coral': '#f97316',
-  'ivory': '#fffff0',
-  'camel': '#c19a6b',
-  'denim': '#1560bd',
-  'mustard': '#ffdb58',
-  'peach': '#ffcba4',
-  'lavender': '#e6e6fa',
-  'mint': '#98ff98',
-  'turquoise': '#40e0d0',
-  'bronze': '#cd7f32',
-  'charcoal': '#36454f',
-  'off-white': '#f5f5f5',
-  'creame': '#fdf5e6',
-};
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { getColorDisplayName, getColorCode, isPatternColor } from "@/lib/colors";
 
 interface ProductResponse {
   product: Product & {
@@ -82,15 +44,18 @@ export default function ProductDetail() {
   const { addToCart } = useCart();
   const { toast } = useToast();
   const { t, isRTL } = useLocale();
-  const isMobile = useMediaQuery("(max-width: 640px)"); // Detect mobile
+  const isMobile = useMediaQuery("(max-width: 640px)");
   
   const [productData, setProductData] = useState<ProductResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
   const [quantity, setQuantity] = useState(1);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start muted for autoplay
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -114,6 +79,63 @@ export default function ProductDetail() {
       .finally(() => setIsLoading(false));
   }, [id]);
 
+  // Auto-play video when it's the current media and handle sound
+  useEffect(() => {
+    if (!productData || !mediaItems[currentMediaIndex]) return;
+
+    const currentMedia = mediaItems[currentMediaIndex];
+    
+    if (currentMedia.type === 'video' && videoRef.current) {
+      // Reset video state
+      videoRef.current.currentTime = 0;
+      
+      // Try to autoplay with sound
+      const playVideo = async () => {
+        try {
+          // First, unmute the video
+          videoRef.current!.muted = false;
+          
+          // Try to play with sound
+          await videoRef.current!.play();
+          setIsPlaying(true);
+          setIsMuted(false);
+          
+          // If autoplay with sound fails, try muted autoplay
+        } catch (err) {
+          console.log("Autoplay with sound failed, trying muted:", err);
+          try {
+            videoRef.current!.muted = true;
+            await videoRef.current!.play();
+            setIsPlaying(true);
+            setIsMuted(true);
+          } catch (mutedErr) {
+            console.log("Muted autoplay also failed:", mutedErr);
+            setIsPlaying(false);
+          }
+        }
+      };
+
+      // Small delay to ensure DOM is ready
+      const timeoutId = setTimeout(playVideo, 300);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        if (videoRef.current) {
+          videoRef.current.pause();
+          setIsPlaying(false);
+        }
+      };
+    }
+  }, [currentMediaIndex, productData]);
+
+  // Reset video when changing media
+  useEffect(() => {
+    if (videoRef.current && isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  }, [currentMediaIndex]);
+
   const formatPrice = (amount: number | string | undefined) => {
     if (!amount) return "0 LYD";
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -121,6 +143,55 @@ export default function ProductDetail() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(num) + ' LYD';
+  };
+
+  // Handle video playback
+  const toggleVideoPlayback = async () => {
+    if (!videoRef.current) return;
+    
+    try {
+      if (isPlaying) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        // If video is muted and user clicks play, try to unmute
+        if (videoRef.current.muted) {
+          videoRef.current.muted = false;
+          setIsMuted(false);
+        }
+        await videoRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (err) {
+      console.error("Error toggling video playback:", err);
+      // Fallback: try muted playback
+      if (!isPlaying) {
+        videoRef.current.muted = true;
+        setIsMuted(true);
+        try {
+          await videoRef.current.play();
+          setIsPlaying(true);
+        } catch (mutedErr) {
+          console.error("Muted playback also failed:", mutedErr);
+        }
+      }
+    }
+  };
+
+  // Toggle mute state
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    
+    videoRef.current.muted = !videoRef.current.muted;
+    setIsMuted(videoRef.current.muted);
+  };
+
+  // Handle video end
+  const handleVideoEnd = () => {
+    setIsPlaying(false);
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+    }
   };
 
   if (isLoading) {
@@ -164,16 +235,39 @@ export default function ProductDetail() {
 
   const { product, similar_products } = productData;
 
-  // Handle images
-  const images: string[] = [];
+  // Handle media (images + video)
+  const mediaItems: Array<{ type: 'image' | 'video', url: string }> = [];
+  
+  // Add video as first item if exists
+  if (product.video) {
+    mediaItems.push({
+      type: 'video',
+      url: resolveMediaUrl(product.video)
+    });
+  }
+  
+  // Add main image
   if (product.image) {
-    images.push(resolveMediaUrl(product.image));
+    mediaItems.push({
+      type: 'image',
+      url: resolveMediaUrl(product.image)
+    });
   }
+  
+  // Add additional images
   if (product.additional_images?.length) {
-    product.additional_images.forEach(img => images.push(resolveMediaUrl(img)));
+    product.additional_images.forEach(img => mediaItems.push({
+      type: 'image',
+      url: resolveMediaUrl(img)
+    }));
   }
-  if (images.length === 0) {
-    images.push("https://via.placeholder.com/600x800?text=No+Image");
+  
+  // Fallback if no media
+  if (mediaItems.length === 0) {
+    mediaItems.push({
+      type: 'image',
+      url: "https://via.placeholder.com/600x800?text=No+Image"
+    });
   }
 
   // Price calculations
@@ -208,8 +302,8 @@ export default function ProductDetail() {
     });
   };
 
-  const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length);
-  const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  const nextMedia = () => setCurrentMediaIndex((prev) => (prev + 1) % mediaItems.length);
+  const prevMedia = () => setCurrentMediaIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length);
 
   return (
     <div className="min-h-screen bg-texture-paper flex flex-col">
@@ -227,32 +321,110 @@ export default function ProductDetail() {
           </Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
-            {/* Left: Image Gallery */}
+            {/* Left: Media Gallery */}
             <div className="lg:col-span-7 space-y-3">
               <div className="relative aspect-[3/4] bg-ivory-50 overflow-hidden border border-ivory-200 group">
                 <AnimatePresence mode="wait">
-                  <motion.img
-                    key={currentImageIndex}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4 }}
-                    src={images[currentImageIndex]}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
+                  {mediaItems[currentMediaIndex].type === 'video' ? (
+                    <motion.div
+                      key={`video-${currentMediaIndex}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="relative w-full h-full"
+                    >
+                      <video
+                        ref={videoRef}
+                        src={mediaItems[currentMediaIndex].url}
+                        className="w-full h-full object-cover"
+                        controls={false}
+                        muted={isMuted}
+                        loop
+                        playsInline
+                        onClick={toggleVideoPlayback}
+                        onEnded={handleVideoEnd}
+                        onPlay={() => setIsPlaying(true)}
+                        onPause={() => setIsPlaying(false)}
+                      />
+                      
+                      {/* Custom Video Controls */}
+                      <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                        <button
+                          onClick={toggleVideoPlayback}
+                          className="w-8 h-8 bg-black/70 backdrop-blur-sm text-white flex items-center justify-center rounded-full hover:bg-black/90 transition-colors"
+                        >
+                          {isPlaying ? (
+                            <Pause className="w-3.5 h-3.5" />
+                          ) : (
+                            <Play className="w-3.5 h-3.5 ml-0.5" />
+                          )}
+                        </button>
+                        
+                        {/* Mute/Unmute Button */}
+                        <button
+                          onClick={toggleMute}
+                          className="w-8 h-8 bg-black/70 backdrop-blur-sm text-white flex items-center justify-center rounded-full hover:bg-black/90 transition-colors"
+                        >
+                          {isMuted ? (
+                            <VolumeX className="w-3.5 h-3.5" />
+                          ) : (
+                            <Volume2 className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                        
+                        <div className="text-white text-[9px] bg-black/50 px-2 py-1 rounded-sm font-sans">
+                          VIDEO
+                        </div>
+                      </div>
+                      
+                      {/* Video playing indicator */}
+                      {isPlaying && (
+                        <div className="absolute top-3 right-3">
+                          <div className="flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-sm">
+                            <div className="flex space-x-[1px]">
+                              <div className="w-[2px] h-1.5 bg-white animate-pulse"></div>
+                              <div className="w-[2px] h-2 bg-white animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                              <div className="w-[2px] h-2.5 bg-white animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                            </div>
+                            <span>Playing</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Play overlay when paused */}
+                      {!isPlaying && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/5 cursor-pointer">
+                          <div className="w-14 h-14 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Play className="w-5 h-5 text-white ml-0.5" />
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  ) : (
+                    <motion.img
+                      key={`image-${currentMediaIndex}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                      src={mediaItems[currentMediaIndex].url}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </AnimatePresence>
                 
-                {images.length > 1 && (
+                {mediaItems.length > 1 && (
                   <>
-                    <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm border border-ivory-200 flex items-center justify-center text-ivory-800 hover:bg-white hover:text-burgundy transition-all shadow-sm opacity-0 group-hover:opacity-100 md:opacity-100">
+                    <button onClick={prevMedia} className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm border border-ivory-200 flex items-center justify-center text-ivory-800 hover:bg-white hover:text-burgundy transition-all shadow-sm opacity-0 group-hover:opacity-100 md:opacity-100">
                       <ChevronLeft className="w-4 h-4" />
                     </button>
-                    <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm border border-ivory-200 flex items-center justify-center text-ivory-800 hover:bg-white hover:text-burgundy transition-all shadow-sm opacity-0 group-hover:opacity-100 md:opacity-100">
+                    <button onClick={nextMedia} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm border border-ivory-200 flex items-center justify-center text-ivory-800 hover:bg-white hover:text-burgundy transition-all shadow-sm opacity-0 group-hover:opacity-100 md:opacity-100">
                       <ChevronRight className="w-4 h-4" />
                     </button>
                     <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-sm font-sans">
-                      {currentImageIndex + 1} / {images.length}
+                      {currentMediaIndex + 1} / {mediaItems.length}
                     </div>
                   </>
                 )}
@@ -270,24 +442,54 @@ export default function ProductDetail() {
                     </span>
                   )}
                   {hasDiscount && (
-                    <span className="bg-burgundy/90 text-cream text-[10px] uppercase tracking-wider px-2 py-1 font-serif shadow-sm">
+                    <span className="bg-burgundy/90 text-cream text-[10px] uppercase tracking-wider px-2 py 1 font-serif shadow-sm">
                       -{Math.round(discountPercentage)}%
                     </span>
                   )}
                 </div>
               </div>
               
-              {images.length > 1 && (
+              {/* Media Thumbnails */}
+              {mediaItems.length > 1 && (
                 <div className="flex space-x-2 overflow-x-auto pb-1 scrollbar-hide">
-                  {images.map((img, idx) => (
+                  {mediaItems.map((item, idx) => (
                     <button
                       key={idx}
-                      onClick={() => setCurrentImageIndex(idx)}
-                      className={`w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 border-2 transition-all duration-200 overflow-hidden ${
-                        currentImageIndex === idx ? "border-ivory-900 opacity-100" : "border-ivory-200 opacity-60 hover:opacity-100"
+                      onClick={() => {
+                        if (videoRef.current && isPlaying) {
+                          videoRef.current.pause();
+                          setIsPlaying(false);
+                        }
+                        setCurrentMediaIndex(idx);
+                      }}
+                      className={`w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 border-2 transition-all duration-200 overflow-hidden relative ${
+                        currentMediaIndex === idx 
+                          ? "border-ivory-900 opacity-100" 
+                          : "border-ivory-200 opacity-60 hover:opacity-100"
                       }`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      {item.type === 'video' ? (
+                        <>
+                          <video
+                            src={item.url}
+                            className="w-full h-full object-cover"
+                            muted
+                            playsInline
+                          />
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                            <Play className="w-4 h-4 text-white" />
+                          </div>
+                        </>
+                      ) : (
+                        <img src={item.url} alt="" className="w-full h-full object-cover" />
+                      )}
+                      
+                      {/* Badge for video */}
+                      {item.type === 'video' && (
+                        <div className="absolute top-1 left-1 bg-black/80 text-white text-[6px] px-1 py-0.5 rounded">
+                          VIDEO
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -340,7 +542,6 @@ export default function ProductDetail() {
                     <>
                       <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
                       <span className="text-green-600">{t('product.in_stock') || 'In Stock'}</span>
-                      <span className="text-ivory-400">({product.quantity_available})</span>
                     </>
                   ) : (
                     <>
@@ -404,7 +605,7 @@ export default function ProductDetail() {
                       {selectedColor && (
                         <span className="text-[10px] text-burgundy font-medium flex items-center gap-1 px-1.5 py-0.5 bg-burgundy/5 rounded capitalize">
                           <Check className="w-2.5 h-2.5" />
-                          {t(`color.${selectedColor}`) || selectedColor}
+                          {t(getColorDisplayName(selectedColor))}
                         </span>
                       )}
                     </div>
@@ -418,11 +619,14 @@ export default function ProductDetail() {
                           className="w-full text-xs border border-ivory-300 bg-white px-2 py-2 pr-8 appearance-none focus:outline-none focus:border-ivory-500 rounded-sm capitalize"
                         >
                           <option value="">{t('product.select_color') || 'Select color'}</option>
-                          {product.color.map((color) => (
-                            <option key={color} value={color}>
-                              {t(`color.${color}`) || color}
-                            </option>
-                          ))}
+                          {product.color.map((color) => {
+                            const translationKey = getColorDisplayName(color);
+                            return (
+                              <option key={color} value={color}>
+                                {t(translationKey)}
+                              </option>
+                            );
+                          })}
                         </select>
                         <ChevronDown className="absolute right-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-ivory-400 pointer-events-none" />
                       </div>
@@ -430,8 +634,10 @@ export default function ProductDetail() {
                       // Desktop/Mobile with few colors: Visual color chips
                       <div className="flex flex-wrap gap-1.5">
                         {product.color.map((color) => {
-                          const colorCode = colorMap[color.toLowerCase()] || '#6B7280';
-                          const isLight = ['white', 'cream', 'beige', 'ivory'].includes(color.toLowerCase());
+                          const colorCode = getColorCode(color);
+                          const isPattern = isPatternColor(color);
+                          const isLight = ['white', 'cream', 'beige', 'ivory', 'eggshell', 'vanilla', 'parchment'].includes(color.toLowerCase());
+                          const translationKey = getColorDisplayName(color);
                           
                           return (
                             <button
@@ -442,17 +648,21 @@ export default function ProductDetail() {
                                   ? 'border-ivory-900 bg-ivory-50 shadow-sm ring-1 ring-ivory-900 ring-offset-1'
                                   : 'border-ivory-200 bg-white hover:border-ivory-400'
                               }`}
-                              title={`${t('product.select_color') || 'Select'} ${color}`}
+                              title={`${t('product.select_color') || 'Select'} ${t(translationKey)}`}
                             >
                               {/* Color Swatch Circle */}
                               <div 
                                 className={`w-4 h-4 rounded-full flex-shrink-0 border ${isLight ? 'border-ivory-300' : 'border-transparent'} shadow-sm`}
-                                style={{ backgroundColor: colorCode }}
+                                style={{ 
+                                  backgroundColor: isPattern ? undefined : colorCode,
+                                  backgroundImage: isPattern ? colorCode : undefined,
+                                  backgroundSize: isPattern ? 'cover' : undefined
+                                }}
                               />
                               
                               {/* Color Name - Hidden on very small screens */}
                               <span className="text-[11px] font-sans text-ivory-700 capitalize hidden xs:inline truncate max-w-[60px]">
-                                {t(`color.${color}`) || color}
+                                {t(translationKey)}
                               </span>
                               
                               {/* Selected Checkmark */}
@@ -491,13 +701,6 @@ export default function ProductDetail() {
                       </button>
                     </div>
                   </div>
-                  
-                  {product.sku && (
-                    <div className="text-right">
-                      <span className="text-[9px] text-ivory-400 uppercase tracking-wider block">{t('product.sku') || 'SKU'}</span>
-                      <span className="font-mono text-ivory-600 text-xs">{product.sku}</span>
-                    </div>
-                  )}
                 </div>
               </div>
 

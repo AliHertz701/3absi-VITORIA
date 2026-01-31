@@ -1,7 +1,6 @@
 // pages/Faq.tsx
 import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { useLocale } from "@/contexts/LocaleContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -292,7 +291,7 @@ export default function Faq() {
         </motion.div>
       </div>
       
-      <Footer />
+ 
     </div>
   );
 }

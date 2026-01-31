@@ -1,6 +1,5 @@
 // pages/Terms.tsx
 import { Navigation } from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { useLocale } from "@/contexts/LocaleContext";
 import { motion } from "framer-motion";
 import { FileText, Shield, CreditCard, Truck, ArrowRight } from "lucide-react";
@@ -151,7 +150,7 @@ export default function Terms() {
         </div>
       </div>
       
-      <Footer />
+
     </div>
   );
 }

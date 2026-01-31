@@ -647,3 +647,125 @@ export const refreshToken = async (): Promise<boolean> => {
 
   return false;
 };
+
+export const productApi = {
+  // Get products list
+  getProducts: async (params: any) => {
+    const token = localStorage.getItem('auth_tokens');
+    const accessToken = token ? JSON.parse(token).access : null;
+    
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, String(value));
+      }
+    });
+    
+    const response = await fetch(`${API_URL}/admin/products/?${queryParams}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch products');
+    return response.json();
+  },
+
+  // Get product stats
+  getStats: async () => {
+    const token = localStorage.getItem('auth_tokens');
+    const accessToken = token ? JSON.parse(token).access : null;
+    
+    const response = await fetch(`${API_URL}/admin/products/stats/`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch stats');
+    return response.json();
+  },
+
+  // Get categories
+  getCategories: async () => {
+    const token = localStorage.getItem('auth_tokens');
+    const accessToken = token ? JSON.parse(token).access : null;
+    
+    const response = await fetch(`${API_URL}/admin/products/categories/`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch categories');
+    return response.json();
+  },
+
+  // Delete product
+  deleteProduct: async (id: number) => {
+    const token = localStorage.getItem('auth_tokens');
+    const accessToken = token ? JSON.parse(token).access : null;
+    
+    const response = await fetch(`${API_URL}/admin/products/${id}/delete/`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+    
+    if (!response.ok) throw new Error('Failed to delete product');
+    return response.json();
+  },
+
+  // Toggle active status
+  toggleActive: async (id: number) => {
+    const token = localStorage.getItem('auth_tokens');
+    const accessToken = token ? JSON.parse(token).access : null;
+    
+    const response = await fetch(`${API_URL}/admin/products/${id}/toggle-active/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) throw new Error('Failed to toggle status');
+    return response.json();
+  },
+
+  // Toggle featured
+  toggleFeatured: async (id: number) => {
+    const token = localStorage.getItem('auth_tokens');
+    const accessToken = token ? JSON.parse(token).access : null;
+    
+    const response = await fetch(`${API_URL}/admin/products/${id}/toggle-featured/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) throw new Error('Failed to toggle featured');
+    return response.json();
+  },
+
+  // Update stock
+  updateStock: async (id: number, quantity: number) => {
+    const token = localStorage.getItem('auth_tokens');
+    const accessToken = token ? JSON.parse(token).access : null;
+    
+    const response = await fetch(`${API_URL}/admin/products/${id}/update-stock/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ quantity }),
+    });
+    
+    if (!response.ok) throw new Error('Failed to update stock');
+    return response.json();
+  },
+};

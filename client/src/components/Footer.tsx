@@ -145,17 +145,26 @@ export function Footer() {
       </div>
       
       {/* Bottom Bar */}
-      <div className="max-w-7xl mx-auto mt-12 lg:mt-16 pt-8 border-t border-cream/10 flex flex-col md:flex-row justify-between items-center text-xs text-cream/40 gap-4">
-        <p className="font-sans text-center md:text-left">
-          &copy; {new Date().getFullYear()} {t('footer.brand') || 'VITORIA'}. {t('footer.rights') || 'All rights reserved.'}
-        </p>
-        <div className={`flex gap-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+      {/* Bottom Bar */}
+<div className="max-w-7xl mx-auto mt-12 lg:mt-16 pt-8 border-t border-cream/10 flex flex-col md:flex-row justify-between items-center text-xs text-cream/40 gap-4">
+  <p className="font-sans text-center md:text-left">
+    &copy; {new Date().getFullYear()} {t('footer.brand') || 'VITORIA'}. {t('footer.rights') || 'All rights reserved.'}
+  </p>
 
-          <Link to="/terms" className="hover:text-cream transition-colors font-sans">
-            {t('footer.terms') || 'Terms of Use'}
-          </Link>
-        </div>
-      </div>
+
+
+    {/* Powered by Sitex */}
+    <a
+      href="https://sitex.com.ly"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-cream/50 font-sans hover:text-cream transition-colors"
+    >
+      {t('footer.powered_by') || 'Powered by Sitex'}
+    </a>
+  </div>
+
+
     </footer>
   );
 }

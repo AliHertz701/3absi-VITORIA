@@ -2,12 +2,12 @@
 import { Link } from "wouter";
 import { useCart } from "@/hooks/use-cart";
 import { Navigation } from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { Trash2, ArrowRight, Plus, Minus, ChevronLeft, Package, Shield, Truck, Edit2 } from "lucide-react";
 import { resolveMediaUrl } from "@/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useLocale } from "@/contexts/LocaleContext";
+import { getColorDisplayName, getColorCode, isPatternColor } from "@/lib/colors"; // Add these imports
 
 // Variant Selector Component
 function VariantSelector({ 
@@ -32,12 +32,18 @@ function VariantSelector({
       <div className={`flex items-center gap-2 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
         {item.selectedSize && (
           <span className="inline-block px-2 py-0.5 text-[10px] uppercase tracking-wider bg-ivory-100 text-ivory-700 border border-ivory-200">
-            {t('cart.item.size', { size: item.selectedSize })}
+            {isRTL 
+              ? `${item.selectedSize} :${t('product.size')}`
+              : `${t('product.size')}: ${item.selectedSize}`
+            }
           </span>
         )}
         {item.selectedColor && (
           <span className="inline-block px-2 py-0.5 text-[10px] uppercase tracking-wider bg-ivory-100 text-ivory-700 border border-ivory-200">
-            {t('cart.item.color', { color: item.selectedColor })}
+            {isRTL 
+              ? `${t(getColorDisplayName(item.selectedColor))} :${t('product.color')}`
+              : `${t('product.color')}: ${t(getColorDisplayName(item.selectedColor))}`
+            }
           </span>
         )}
         <button 
@@ -83,9 +89,14 @@ function VariantSelector({
               className="w-full text-sm border border-ivory-300 bg-white px-2 py-1.5 focus:outline-none focus:border-ivory-500"
             >
               <option value="">{t('cart.item.selectColor')}</option>
-              {item.product.color.map(color => (
-                <option key={color} value={color}>{color}</option>
-              ))}
+              {item.product.color.map(color => {
+                const translationKey = getColorDisplayName(color);
+                return (
+                  <option key={color} value={color}>
+                    {t(translationKey)}
+                  </option>
+                );
+              })}
             </select>
           </div>
         )}
@@ -113,6 +124,7 @@ function VariantSelector({
   );
 }
 
+// Rest of the Cart component remains the same...
 export default function Cart() {
   const { items, removeFromCart, updateQuantity, updateVariant, total, uniqueProductCount } = useCart();
   const { t, isRTL } = useLocale();
@@ -465,7 +477,7 @@ export default function Cart() {
         </div>
       </div>
 
-      <Footer />
+
     </div>
   );
 }

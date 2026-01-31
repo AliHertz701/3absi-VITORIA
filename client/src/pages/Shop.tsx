@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { ShopProductCard } from "@/components/ShopProductCard";
 import { Check, ArrowRight } from "lucide-react";
 import type { Product } from "@/api";
@@ -270,7 +269,7 @@ export default function Shop() {
         </div>
       </div>
 
-      <Footer />
+  
     </div>
   );
 }

@@ -54,6 +54,8 @@ export default function ProductForm({ product: initialProduct, categories, onClo
       sizes: [] as string[],
       material: '',
       season: '',
+      buy_price: '',  // <-- ADD THIS
+      source: '',     // <-- ADD THIS
       gender: 'unisex',
       brand: '',
       color: [] as string[],
@@ -162,6 +164,8 @@ export default function ProductForm({ product: initialProduct, categories, onClo
     gender: productData.gender || 'unisex',
     brand: productData.brand || '',
     color: colorsArray,
+    buy_price: productData.buy_price ? String(productData.buy_price) : '',  // <-- ADD THIS
+    source: productData.source || '',  // <-- ADD THIS
     care_instructions: productData.care_instructions || '',
     show_quantity: productData.show_quantity ?? true,
     show_price: productData.show_price ?? true,
@@ -477,19 +481,47 @@ export default function ProductForm({ product: initialProduct, categories, onClo
                       />
                     </div>
 
-                    <div>
-                      <Label htmlFor="discount_percentage">{t('product.discount')}</Label>
-                      <Input
-                        id="discount_percentage"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="100"
-                        {...register('discount_percentage')}
-                        placeholder="0"
-                      />
-                    </div>
+                    
                   </div>
+                  {/* ADD BUY PRICE FIELD */}
+    <div>
+      <Label htmlFor="buy_price">{t('product.buy_price')}</Label>
+      <Input
+        id="buy_price"
+        type="number"
+        step="0.01"
+        {...register('buy_price')}
+        placeholder="0.00"
+      />
+      <p className="text-xs text-gray-500 mt-1">{t('product.buy_price_desc')}</p>
+    </div>
+  </div>
+
+  {/* ADD SOURCE FIELD - Full width */}
+  <div>
+    <Label htmlFor="source">{t('product.source')}</Label>
+    <Input
+      id="source"
+      {...register('source')}
+      placeholder={t('product.source_placeholder')}
+    />
+    <p className="text-xs text-gray-500 mt-1">{t('product.source_desc')}</p>
+  </div>
+
+  <div className="grid grid-cols-2 gap-4">
+    <div>
+      <Label htmlFor="discount_percentage">{t('product.discount')}</Label>
+      <Input
+        id="discount_percentage"
+        type="number"
+        step="0.01"
+        min="0"
+        max="100"
+        {...register('discount_percentage')}
+        placeholder="0"
+      />
+    </div>
+
 
                   <div>
                     <Label htmlFor="quantity_available">{t('product.stock')} *</Label>
@@ -782,13 +814,10 @@ export default function ProductForm({ product: initialProduct, categories, onClo
                     )}
                   </div>
 
-                  {/* Colors */}
-                  <div>
-                    <Label>{t('product.color')}</Label>
-                    <div className="flex gap-2 mt-2">
-                      <div>
+{/* Colors */}
+<div>
   <Label>{t('product.color')}</Label>
-
+  
   <div className="grid grid-cols-4 gap-2 mt-2 max-h-48 overflow-y-auto">
     {getAvailableColors().map((color) => {
       const selected = colors.includes(color);
@@ -817,7 +846,7 @@ export default function ProductForm({ product: initialProduct, categories, onClo
             }}
           />
           <span className="truncate">
-            {getColorDisplayName(color)}
+            {t(getColorDisplayName(color))} {/* Updated */}
           </span>
         </button>
       );
@@ -832,7 +861,7 @@ export default function ProductForm({ product: initialProduct, categories, onClo
             className="w-3 h-3 rounded-full border"
             style={{ background: getColorCode(color) }}
           />
-          {getColorDisplayName(color)}
+          {t(getColorDisplayName(color))} {/* Updated */}
           <button onClick={() => removeColor(color)}>
             <X className="w-3 h-3 ml-1" />
           </button>
@@ -841,27 +870,7 @@ export default function ProductForm({ product: initialProduct, categories, onClo
     </div>
   )}
 </div>
-
-                    </div>
-                    {colors.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {colors.map((color) => (
-                          <Badge key={color} variant="secondary" className="pl-3 pr-2 py-1">
-                            {t(`color.${color.toLowerCase()}`) || color}
-                            <button
-                              type="button"
-                              onClick={() => removeColor(color)}
-                              className="ml-2 hover:text-red-600"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
                 </div>
-
                 {/* Settings */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium text-gray-900">{t('admin.products.settings')}</h3>

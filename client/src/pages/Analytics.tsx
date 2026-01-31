@@ -345,7 +345,7 @@ return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Revenue Chart */}
+          {/* Revenue Chart
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -372,7 +372,7 @@ return (
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Recent Invoices */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -382,7 +382,7 @@ return (
                 <p className="text-sm text-gray-600 mt-1">{t('analytics.recent_invoices.subtitle')}</p>
               </div>
               <button
-                onClick={() => window.location.href = '/admin/invoices'}
+                onClick={() => window.location.href = '/admin/orders'}
                 className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
               >
                 {t('analytics.view_all')}

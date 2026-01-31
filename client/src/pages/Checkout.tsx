@@ -3,7 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCart } from "@/hooks/use-cart";
 import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { useLocation } from "wouter";
 import { Loader2, MapPin, Phone, User, CheckCircle2, Package } from "lucide-react";
 import { z } from "zod";
@@ -11,6 +10,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { resolveMediaUrl } from "@/api";
 import { useLocale } from "@/contexts/LocaleContext";
+import { getColorDisplayName } from "@/lib/colors";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
@@ -97,12 +97,15 @@ export default function Checkout() {
 
     try {
       const invoiceItems = items.map(item => ({
-        product_id: item.product.id,
-        name: item.product.name,
-        quantity: item.quantity,
-        price: item.product.price,
-        discount_percentage: item.product.discount_percentage || 0,
-      }));
+  product_id: item.product.id,
+  name: item.product.name,
+  quantity: item.quantity,
+  price: item.product.price,
+  discount_percentage: item.product.discount_percentage || 0,
+  size: item.selectedSize || null,     // ← send size
+  color: item.selectedColor || null,   // ← send color
+}));
+
 
       const response = await fetch(`${API_URL}/invoices/create/`, {
         method: "POST",
@@ -347,41 +350,54 @@ export default function Checkout() {
                   </h3>
                 </div>
                 
-                <div className="p-5 space-y-4 max-h-[400px] overflow-y-auto">
-                  {items.map((item) => {
-                    const itemPrice = typeof item.product.price === 'string' 
-                      ? parseFloat(item.product.price) 
-                      : item.product.price;
-                    const itemTotal = itemPrice * item.quantity;
-                    
-                    return (
-                      <div key={item.id} className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <div className="w-16 h-20 bg-ivory-100 flex-shrink-0 border border-ivory-200">
-                          <img 
-                            src={resolveMediaUrl(item.product.image)} 
-                            alt={item.product.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/100x120?text=No+Image';
-                            }}
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-serif text-sm text-ivory-900 line-clamp-1">{item.product.name}</h4>
-                          <p className="text-xs text-ivory-500 font-sans mt-0.5">
-                            {item.selectedSize && `Size: ${item.selectedSize}`}
-                            {item.selectedSize && item.selectedColor && ' / '}
-                            {item.selectedColor && `Color: ${item.selectedColor}`}
-                          </p>
-                          <div className="flex justify-between items-center mt-2">
-                            <span className="text-xs text-ivory-400 font-sans">x{item.quantity}</span>
-                            <span className="font-serif text-sm text-ivory-900">{formatPrice(itemTotal)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+
+
+<div className="p-5 space-y-4 max-h-[400px] overflow-y-auto">
+  {items.map((item) => {
+    const itemPrice = typeof item.product.price === 'string' 
+      ? parseFloat(item.product.price) 
+      : item.product.price;
+    const itemTotal = itemPrice * item.quantity;
+    
+    return (
+      <div key={item.id} className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="w-16 h-20 bg-ivory-100 flex-shrink-0 border border-ivory-200">
+          <img 
+            src={resolveMediaUrl(item.product.image)} 
+            alt={item.product.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/100x120?text=No+Image';
+            }}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-serif text-sm text-ivory-900 line-clamp-1">{item.product.name}</h4>
+          <p className="text-xs text-ivory-500 font-sans mt-0.5">
+            {item.selectedSize && (
+              <>
+                {isRTL ? `${item.selectedSize} :${t('product.size')}` : `${t('product.size')}: ${item.selectedSize}`}
+              </>
+            )}
+            {item.selectedSize && item.selectedColor && ' / '}
+            {item.selectedColor && (
+              <>
+                {isRTL 
+                  ? `${t(getColorDisplayName(item.selectedColor))} :${t('product.color')}`
+                  : `${t('product.color')}: ${t(getColorDisplayName(item.selectedColor))}`
+                }
+              </>
+            )}
+          </p>
+          <div className="flex justify-between items-center mt-2">
+            <span className="text-xs text-ivory-400 font-sans">x{item.quantity}</span>
+            <span className="font-serif text-sm text-ivory-900">{formatPrice(itemTotal)}</span>
+          </div>
+        </div>
+      </div>
+    );
+  })}
+</div>
 
                 <div className="p-5 bg-ivory-50/50 border-t border-ivory-200 space-y-2">
                   <div className={`flex justify-between text-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -487,7 +503,6 @@ export default function Checkout() {
         )}
       </AnimatePresence>
 
-      <Footer />
     </div>
   );
 }

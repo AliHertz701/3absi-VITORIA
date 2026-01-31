@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navigation } from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useBranches } from "@/hooks/use-branches";
 import { contactApi, type ContactFormData } from "@/api";
@@ -683,7 +682,6 @@ export default function Contact() {
         </motion.div>
       </div>
       
-      <Footer />
     </div>
   );
 }
