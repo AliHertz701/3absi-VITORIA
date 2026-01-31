@@ -3,6 +3,8 @@ import React, { ReactNode, useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useLocation } from 'wouter';
+import { Building2 } from 'lucide-react';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, 
@@ -79,6 +81,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       name: t('admin.nav.analytics'), 
       icon: BarChart3, 
       href: '/admin/analytics',
+      color: 'text-orange-600 bg-orange-50'
+    },
+    { 
+      name: t('admin.nav.citeies'), 
+      icon: Building2, 
+      href: '/admin/cities',
       color: 'text-orange-600 bg-orange-50'
     },
   ];

@@ -28,7 +28,7 @@ import AdminOrders from "./pages/AdminOrders";
 import BannerAdminPage from "./pages/BannerAdminPage";
 import Categories from "./pages/Categories";
 import AdminAnalytics from "./pages/Analytics";
-
+import AdminCities from "./pages/AdminCities";
 // Context providers
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -140,11 +140,11 @@ function Router() {
         )}
       </Route>
 
-      <Route path="/admin/profile">
+      <Route path="/admin/cities">
         {() => (
           <ProtectedRoute adminOnly>
             <AdminLayout>
-              <div>Profile</div>
+              <AdminCities />
             </AdminLayout>
           </ProtectedRoute>
         )}

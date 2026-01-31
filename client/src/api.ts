@@ -250,7 +250,11 @@ export interface ApiResponse<T> {
   message?: string;
   errors?: Record<string, string[]>;
 }
-
+interface City {
+  id: number;
+  name: string;
+  delivery_fee: number | string;
+}
 // ================= ADMIN API =================
 export const adminApi = {
   // Dashboard Stats
@@ -461,6 +465,49 @@ export const adminApi = {
     });
     if (!response.ok) throw new Error('Failed to mark message as read');
     return await response.json();
+  },
+
+  getCities: async () => {
+    const response = await fetch(`${API_URL}/admin/cities/`, {
+      headers: getAuthHeader(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch cities');
+    return response.json();
+  },
+
+  createCity: async (data: any) => {
+    const response = await fetch(`${API_URL}/admin/cities/`, {
+      method: 'POST',
+      headers: {
+        ...getAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create city');
+    return response.json();
+  },
+
+  updateCity: async (id: number, data: any) => {
+    const response = await fetch(`${API_URL}/admin/cities/${id}/`, {
+      method: 'PUT',
+      headers: {
+        ...getAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update city');
+    return response.json();
+  },
+
+  deleteCity: async (id: number) => {
+    const response = await fetch(`${API_URL}/admin/cities/${id}/`, {
+      method: 'DELETE',
+      headers: getAuthHeader(),
+    });
+    if (!response.ok) throw new Error('Failed to delete city');
+    return {};
   },
 };
 
